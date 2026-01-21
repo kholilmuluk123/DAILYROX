@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard Mission WIB</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0f1a;
+      --card:#121a2f;
+      --accent:#00e5ff;
+      --accent2:#00ff88;
+      --text:#e6f1ff;
+      --muted:#7aa2f7;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Orbitron',sans-serif;
+      background:radial-gradient(circle at top, #101a3a, var(--bg));
+      color:var(--text);
+      min-height:100vh;
+      padding:16px;
+    }
+
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:16px;
+    }
+
+    .time{
+      font-size:1.4rem;
+      color:var(--accent);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+    }
+
+    .card{
+      background:linear-gradient(160deg, #141d3a, var(--card));
+      border-radius:16px;
+      padding:16px;
+      box-shadow:0 0 25px rgba(0,229,255,.15);
+      min-height:600px; /* ±15 baris visual */
+    }
+
+    .card h2{
+      margin:0 0 12px 0;
+      color:var(--accent);
+      text-align:center;
+    }
+
+    /* ACCOUNT */
+    .account-name{
+      font-size:1.3rem;
+      text-align:center;
+      margin:16px 0;
+      color:var(--accent2);
+    }
+
+    .account-name[contenteditable]{
+      outline:2px dashed var(--accent);
+      border-radius:8px;
+      padding:6px;
+    }
+
+    /* CHECKLIST */
+    .checklist{
+      list-style:none;
+      padding:0;
+      margin:0;
+    }
+
+    .checklist li{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 6px;
+      border-bottom:1px dashed rgba(255,255,255,.1);
+      font-size:0.85rem;
+    }
+
+    .checklist input{
+      width:20px;
+      height:20px;
+      accent-color:var(--accent2);
+    }
+
+    .footer-note{
+      margin-top:12px;
+      font-size:0.7rem;
+      color:var(--muted);
+      text-align:center;
+    }
+
+    @media(max-width:900px){
+      .grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="time" id="time">--:--:-- WIB</div>
+    <div class="time">Daily Reset 05:00 WIB</div>
+  </div>
+
+  <div class="grid">
+    <!-- ACCOUNT -->
+    <div class="card">
+      <h2>ACCOUNT</h2>
+      <div class="account-name" id="accountName" contenteditable="true"></div>
+      <div class="footer-note">Klik nama untuk edit (tidak reset)</div>
+    </div>
+
+    <!-- MISSION BOARD -->
+    <div class="card">
+      <h2>MISSION BOARD</h2>
+      <ul class="checklist" id="mission"></ul>
+    </div>
+
+    <!-- ODIN BLESSING -->
+    <div class="card">
+      <h2>ODIN BLESSING</h2>
+      <ul class="checklist" id="odin"></ul>
+    </div>
+
+    <!-- INSTANCE -->
+    <div class="card">
+      <h2>INSTANCE</h2>
+      <ul class="checklist" id="instance"></ul>
+    </div>
+  </div>
+
+<script>
+  const ITEMS = 15; // ±15 baris
+  const ZONE = 'Asia/Jakarta';
+
+  const lists = {
+    mission: document.getElementById('mission'),
+    odin: document.getElementById('odin'),
+    instance: document.getElementById('instance')
+  };
+
+  function createChecklist(id){
+    lists[id].innerHTML='';
+    for(let i=1;i<=ITEMS;i++){
+      const li=document.createElement('li');
+      li.innerHTML=`<input type="checkbox" data-key="${id}-${i}"> <span>Task ${i}</span>`;
+      lists[id].appendChild(li);
+    }
+  }
+
+  Object.keys(lists).forEach(createChecklist);
+
+  /* ===== STORAGE ===== */
+  const accountName = document.getElementById('accountName');
+  accountName.textContent = localStorage.getItem('accountName') || 'NAMA AKUN';
+
+  accountName.addEventListener('input',()=>{
+    localStorage.setItem('accountName',accountName.textContent);
+  });
+
+  document.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.checked = localStorage.getItem(cb.dataset.key)==='1';
+    cb.addEventListener('change',()=>{
+      localStorage.setItem(cb.dataset.key, cb.checked?'1':'0');
+    });
+  });
+
+  /* ===== TIME WIB & RESET ===== */
+  function getWIB(){
+    return new Date(new Date().toLocaleString('en-US',{timeZone:ZONE}));
+  }
+
+  function updateTime(){
+    const now=getWIB();
+    document.getElementById('time').textContent=
+      now.toLocaleTimeString('id-ID',{hour12:false})+' WIB';
+
+    const lastReset=localStorage.getItem('lastReset');
+    const resetPoint=new Date(now);
+    resetPoint.setHours(5,0,0,0);
+
+    if((!lastReset || new Date(lastReset)<resetPoint) && now>=resetPoint){
+      resetChecklist();
+      localStorage.setItem('lastReset',now);
+    }
+  }
+
+  function resetChecklist(){
+    document.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.checked=false;
+      localStorage.removeItem(cb.dataset.key);
+    });
+  }
+
+  setInterval(updateTime,1000);
+  updateTime();
+</script>
+</body>
+</html>
