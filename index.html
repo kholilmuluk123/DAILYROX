@@ -116,7 +116,7 @@
     <!-- ACCOUNT -->
     <div class="card">
       <h2>ACCOUNT</h2>
-      <div class="account-name" id="accountName" contenteditable="true"></div>
+      <ul class="checklist" id="accounts"></ul>
       <div class="footer-note">Klik nama untuk edit (tidak reset)</div>
     </div>
 
@@ -144,6 +144,7 @@
   const ZONE = 'Asia/Jakarta';
 
   const lists = {
+    accounts: document.getElementById('accounts'),
     mission: document.getElementById('mission'),
     odin: document.getElementById('odin'),
     instance: document.getElementById('instance')
