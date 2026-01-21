@@ -58,11 +58,25 @@
     }
 
     /* ACCOUNT */
-    .account-name{
-      font-size:1.3rem;
-      text-align:center;
-      margin:16px 0;
+    .account-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .account-input{
+      background:transparent;
+      border:2px dashed var(--accent);
+      border-radius:10px;
+      padding:8px 10px;
       color:var(--accent2);
+      font-family:'Orbitron',sans-serif;
+      font-size:0.85rem;
+    }
+
+    .account-input:focus{
+      outline:none;
+      box-shadow:0 0 10px rgba(0,255,136,.6);
     }
 
     .account-name[contenteditable]{
@@ -116,8 +130,8 @@
     <!-- ACCOUNT -->
     <div class="card">
       <h2>ACCOUNT</h2>
-      <ul class="checklist" id="accounts"></ul>
-      <div class="footer-note">Klik nama untuk edit (tidak reset)</div>
+      <div class="account-list" id="accountList"></div>
+      <div class="footer-note">Klik pada kotak untuk edit (tidak reset)</div>
     </div>
 
     <!-- MISSION BOARD -->
@@ -140,11 +154,28 @@
   </div>
 
 <script>
-  const ITEMS = 15; // ±15 baris
+  const ITEMS = 15; // jumlah baris
   const ZONE = 'Asia/Jakarta';
 
+  /* ===== ACCOUNT TEXTBOX ===== */
+  const accountList = document.getElementById('accountList');
+  if(accountList){
+    for(let i=1;i<=ITEMS;i++){
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'account-input';
+      input.placeholder = 'Account ' + i;
+      const key = 'account-'+i;
+      input.value = localStorage.getItem(key) || '';
+      input.addEventListener('input',()=>{
+        localStorage.setItem(key,input.value);
+      });
+      accountList.appendChild(input);
+    }
+  }
+
+  /* ===== CHECKLIST ===== */
   const lists = {
-    accounts: document.getElementById('accounts'),
     mission: document.getElementById('mission'),
     odin: document.getElementById('odin'),
     instance: document.getElementById('instance')
@@ -154,20 +185,12 @@
     lists[id].innerHTML='';
     for(let i=1;i<=ITEMS;i++){
       const li=document.createElement('li');
-      li.innerHTML=`<input type="checkbox" data-key="${id}-${i}"> <span>Task ${i}</span>`;
+      li.innerHTML=`<input type=\"checkbox\" data-key=\"${id}-${i}\"> <span>Task ${i}</span>`;
       lists[id].appendChild(li);
     }
   }
 
   Object.keys(lists).forEach(createChecklist);
-
-  /* ===== STORAGE ===== */
-  const accountName = document.getElementById('accountName');
-  accountName.textContent = localStorage.getItem('accountName') || 'NAMA AKUN';
-
-  accountName.addEventListener('input',()=>{
-    localStorage.setItem('accountName',accountName.textContent);
-  });
 
   document.querySelectorAll('input[type=checkbox]').forEach(cb=>{
     cb.checked = localStorage.getItem(cb.dataset.key)==='1';
@@ -191,16 +214,12 @@
     resetPoint.setHours(5,0,0,0);
 
     if((!lastReset || new Date(lastReset)<resetPoint) && now>=resetPoint){
-      resetChecklist();
+      document.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+        cb.checked=false;
+        localStorage.removeItem(cb.dataset.key);
+      });
       localStorage.setItem('lastReset',now);
     }
-  }
-
-  function resetChecklist(){
-    document.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-      cb.checked=false;
-      localStorage.removeItem(cb.dataset.key);
-    });
   }
 
   setInterval(updateTime,1000);
